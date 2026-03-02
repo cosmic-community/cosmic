@@ -4,13 +4,24 @@ interface TeamCardProps {
   member: TeamMember
 }
 
+// Changed: Helper to safely extract string value from Cosmic metafields
+function toStr(val: unknown): string {
+  if (val === null || val === undefined) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'number') return String(val)
+  if (typeof val === 'object' && 'value' in (val as Record<string, unknown>)) {
+    return String((val as Record<string, unknown>).value ?? '')
+  }
+  return String(val)
+}
+
 export default function TeamCard({ member }: TeamCardProps) {
-  const name = member.metadata?.name || member.title
-  const role = member.metadata?.role || ''
-  const bio = member.metadata?.bio || ''
+  const name = toStr(member.metadata?.name) || member.title // Changed: safe string extraction
+  const role = toStr(member.metadata?.role) // Changed: safe string extraction
+  const bio = toStr(member.metadata?.bio) // Changed: safe string extraction
   const headshot = member.metadata?.headshot
-  const linkedinUrl = member.metadata?.linkedin_url
-  const twitterUrl = member.metadata?.twitter_url
+  const linkedinUrl = toStr(member.metadata?.linkedin_url) // Changed: safe string extraction
+  const twitterUrl = toStr(member.metadata?.twitter_url) // Changed: safe string extraction
 
   return (
     <div className="group text-center bg-white border border-dark-100 rounded-2xl p-8 card-hover">

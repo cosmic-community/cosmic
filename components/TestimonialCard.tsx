@@ -4,6 +4,17 @@ interface TestimonialCardProps {
   testimonial: Testimonial
 }
 
+// Changed: Helper to safely extract string value from Cosmic metafields
+function toStr(val: unknown): string {
+  if (val === null || val === undefined) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'number') return String(val)
+  if (typeof val === 'object' && 'value' in (val as Record<string, unknown>)) {
+    return String((val as Record<string, unknown>).value ?? '')
+  }
+  return String(val)
+}
+
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex gap-1">
@@ -24,12 +35,13 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function TestimonialCard({ testimonial }: TestimonialCardProps) {
-  const personName = testimonial.metadata?.person_name || testimonial.title
-  const company = testimonial.metadata?.company || ''
-  const role = testimonial.metadata?.role || ''
-  const quote = testimonial.metadata?.quote || ''
+  const personName = toStr(testimonial.metadata?.person_name) || testimonial.title // Changed: safe string extraction
+  const company = toStr(testimonial.metadata?.company) // Changed: safe string extraction
+  const role = toStr(testimonial.metadata?.role) // Changed: safe string extraction
+  const quote = toStr(testimonial.metadata?.quote) // Changed: safe string extraction
   const avatar = testimonial.metadata?.avatar
-  const rating = testimonial.metadata?.rating ?? 5
+  const ratingRaw = testimonial.metadata?.rating // Changed: safely parse rating
+  const rating = typeof ratingRaw === 'number' ? ratingRaw : (parseInt(toStr(ratingRaw), 10) || 5)
 
   return (
     <div className="bg-white border border-dark-100 rounded-2xl p-8 card-hover flex flex-col">

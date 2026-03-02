@@ -4,13 +4,25 @@ interface PricingCardProps {
   tier: PricingTier
 }
 
+// Changed: Helper to safely extract string value from Cosmic metafields
+// Select-dropdown metafields return {key, value} objects instead of plain strings
+function toStr(val: unknown): string {
+  if (val === null || val === undefined) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'number') return String(val)
+  if (typeof val === 'object' && 'value' in (val as Record<string, unknown>)) {
+    return String((val as Record<string, unknown>).value ?? '')
+  }
+  return String(val)
+}
+
 export default function PricingCard({ tier }: PricingCardProps) {
-  const planName = tier.metadata?.plan_name || tier.title
-  const price = tier.metadata?.price || '$0'
-  const billingPeriod = tier.metadata?.billing_period || '/month'
+  const planName = toStr(tier.metadata?.plan_name) || tier.title
+  const price = toStr(tier.metadata?.price) || '$0'
+  const billingPeriod = toStr(tier.metadata?.billing_period) || '/month'
   const isFeatured = tier.metadata?.is_featured === true
-  const ctaLabel = tier.metadata?.cta_label || 'Get Started'
-  const featureListRaw = tier.metadata?.feature_list || ''
+  const ctaLabel = toStr(tier.metadata?.cta_label) || 'Get Started'
+  const featureListRaw = toStr(tier.metadata?.feature_list)
 
   // Parse feature list — assume newline or comma separated
   const features = featureListRaw

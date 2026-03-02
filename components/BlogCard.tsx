@@ -5,11 +5,22 @@ interface BlogCardProps {
   post: BlogPost
 }
 
+// Changed: Helper to safely extract string value from Cosmic metafields
+function toStr(val: unknown): string {
+  if (val === null || val === undefined) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'number') return String(val)
+  if (typeof val === 'object' && 'value' in (val as Record<string, unknown>)) {
+    return String((val as Record<string, unknown>).value ?? '')
+  }
+  return String(val)
+}
+
 export default function BlogCard({ post }: BlogCardProps) {
-  const excerpt = post.metadata?.excerpt || ''
+  const excerpt = toStr(post.metadata?.excerpt) // Changed: safe string extraction
   const featuredImage = post.metadata?.featured_image
   const author = post.metadata?.author
-  const publishedDate = post.metadata?.published_date
+  const publishedDate = toStr(post.metadata?.published_date) // Changed: safe string extraction
 
   const formattedDate = publishedDate
     ? new Date(publishedDate).toLocaleDateString('en-US', {
@@ -18,6 +29,13 @@ export default function BlogCard({ post }: BlogCardProps) {
         day: 'numeric',
       })
     : null
+
+  // Changed: safely extract author name as string
+  const authorName = author
+    ? toStr((author as Record<string, unknown>).metadata
+        ? ((author as Record<string, unknown>).metadata as Record<string, unknown>)?.name
+        : undefined) || toStr((author as Record<string, unknown>).title)
+    : ''
 
   return (
     <Link
@@ -59,17 +77,19 @@ export default function BlogCard({ post }: BlogCardProps) {
         <div className="flex items-center gap-3 mb-3">
           {author && (
             <div className="flex items-center gap-2">
-              {author.metadata?.headshot?.imgix_url && (
+              {(author as Record<string, unknown>).metadata &&
+                ((author as Record<string, unknown>).metadata as Record<string, unknown>)?.headshot &&
+                (((author as Record<string, unknown>).metadata as Record<string, unknown>)?.headshot as Record<string, unknown>)?.imgix_url && (
                 <img
-                  src={`${author.metadata.headshot.imgix_url}?w=48&h=48&fit=crop&auto=format,compress`}
-                  alt={author.metadata?.name || author.title}
+                  src={`${(((author as Record<string, unknown>).metadata as Record<string, unknown>)?.headshot as Record<string, unknown>)?.imgix_url}?w=48&h=48&fit=crop&auto=format,compress`}
+                  alt={authorName}
                   width={24}
                   height={24}
                   className="w-6 h-6 rounded-full object-cover"
                 />
               )}
               <span className="text-xs font-medium text-dark-500">
-                {author.metadata?.name || author.title}
+                {authorName}
               </span>
             </div>
           )}

@@ -19,15 +19,28 @@ const iconMap: Record<string, string> = {
   users: '👥',
 }
 
-function getIcon(icon?: string): string {
-  if (!icon) return '✨'
-  const lower = icon.toLowerCase()
-  return iconMap[lower] || icon
+// Changed: Helper to safely extract string value from Cosmic metafields
+// Select-dropdown metafields return {key, value} objects instead of plain strings
+function toStr(val: unknown): string {
+  if (val === null || val === undefined) return ''
+  if (typeof val === 'string') return val
+  if (typeof val === 'number') return String(val)
+  if (typeof val === 'object' && 'value' in (val as Record<string, unknown>)) {
+    return String((val as Record<string, unknown>).value ?? '')
+  }
+  return String(val)
+}
+
+function getIcon(icon?: unknown): string {
+  const iconStr = toStr(icon) // Changed: handle {key,value} objects
+  if (!iconStr) return '✨'
+  const lower = iconStr.toLowerCase()
+  return iconMap[lower] || iconStr
 }
 
 export default function FeatureCard({ feature }: FeatureCardProps) {
-  const name = feature.metadata?.name || feature.title
-  const description = feature.metadata?.description || ''
+  const name = toStr(feature.metadata?.name) || feature.title // Changed: safe string extraction
+  const description = toStr(feature.metadata?.description) // Changed: safe string extraction
   const icon = getIcon(feature.metadata?.icon)
 
   return (
